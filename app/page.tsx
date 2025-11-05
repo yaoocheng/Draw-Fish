@@ -10,6 +10,7 @@ interface Fish {
     created_at: string;
 }
 
+
 // 裁剪 PNG DataURL，去除透明边界，保留内容并加 padding
 const cropCanvasToContent = (dataUrl: string, padding = 10): Promise<string> => {
     return new Promise((resolve) => {
@@ -261,27 +262,41 @@ const FishTankComponent = () => {
 };
 
 // Sub-components
-const DrawingCanvas = ({ canvasRef, brushColor, setBrushColor, brushRadius, setBrushRadius, onSave, onClear, saving }: { canvasRef: React.RefObject<ReactSketchCanvasRef | null>, brushColor: string, setBrushColor: (color: string) => void, brushRadius: number, setBrushRadius: (radius: number) => void, onSave: () => void, onClear: () => void, saving: boolean }) => (
-    <div style={{ border: '1px solid #d1e9ff', borderRadius: '16px', padding: '16px', background: 'rgba(255,255,255,0.88)', boxShadow: '0 12px 32px rgba(2,132,199,0.25)', backdropFilter: 'saturate(180%) blur(6px)', maxWidth: '1040px' }}>
-        <h2 style={{ margin: '0 0 12px', color: '#0b7285' }}>画出你的小鱼（方向请朝右）</h2>
-        <ReactSketchCanvas
-            ref={canvasRef}
-            width="1000px"
-            height="500px"
-            strokeWidth={brushRadius}
-            strokeColor={brushColor}
-            canvasColor="transparent"
-        />
-        <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <label style={{ color: '#0b7285', fontWeight: 600 }}>颜色：</label>
-            <input type="color" value={brushColor} onChange={(e) => setBrushColor(e.target.value)} style={{ width: '40px', height: '32px', border: 'none', background: 'transparent', cursor: 'pointer' }} />
-            <label style={{ marginLeft: '10px', color: '#0b7285', fontWeight: 600 }}>笔刷大小：</label>
-            <input type="range" min="1" max="50" value={brushRadius} onChange={(e) => setBrushRadius(Number(e.target.value))} style={{ width: '200px' }} />
-            <button onClick={onSave} disabled={saving} style={{ marginLeft: 'auto', padding: '8px 14px', borderRadius: '8px', border: 'none', background: saving ? '#94d3a2' : 'linear-gradient(135deg, #22c55e, #16a34a)', color: '#fff', fontWeight: 600, boxShadow: '0 6px 16px rgba(22,163,74,0.35)', cursor: saving ? 'not-allowed' : 'pointer' }}>{saving ? '保存中...' : '保存小鱼'}</button>
-            <button onClick={onClear} style={{ marginLeft: '10px', padding: '8px 14px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #fb7185, #ef4444)', color: '#fff', fontWeight: 600, boxShadow: '0 6px 16px rgba(239,68,68,0.35)', cursor: 'pointer' }}>清空画布</button>
-        </div>
-    </div>
-);
+const DrawingCanvas = ({ canvasRef, brushColor, setBrushColor, brushRadius, setBrushRadius, onSave, onClear, saving }: { canvasRef: React.RefObject<ReactSketchCanvasRef | null>, brushColor: string, setBrushColor: (color: string) => void, brushRadius: number, setBrushRadius: (radius: number) => void, onSave: () => void, onClear: () => void, saving: boolean }) => {
+    const router = useRouter();
+
+    return (
+        <div style={{ border: '1px solid #d1e9ff', borderRadius: '16px', padding: '16px', background: 'rgba(255,255,255,0.88)', boxShadow: '0 12px 32px rgba(2,132,199,0.25)', backdropFilter: 'saturate(180%) blur(6px)', maxWidth: '1040px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <h2 style={{ margin: '0', color: '#0b7285' }}>画出你的小鱼（方向请朝右）</h2>
+
+            </div>
+
+            <ReactSketchCanvas
+                ref={canvasRef}
+                width="1000px"
+                height="500px"
+                strokeWidth={brushRadius}
+                strokeColor={brushColor}
+                canvasColor="transparent"
+            />
+            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <label style={{ color: '#0b7285', fontWeight: 600 }}>颜色：</label>
+                <input type="color" value={brushColor} onChange={(e) => setBrushColor(e.target.value)} style={{ width: '40px', height: '32px', border: 'none', background: 'transparent', cursor: 'pointer' }} />
+                <label style={{ marginLeft: '10px', color: '#0b7285', fontWeight: 600 }}>笔刷大小：</label>
+                <input type="range" min="1" max="50" value={brushRadius} onChange={(e) => setBrushRadius(Number(e.target.value))} style={{ width: '200px' }} />
+                <button onClick={onSave} disabled={saving} style={{ marginLeft: 'auto', padding: '8px 14px', borderRadius: '8px', border: 'none', background: saving ? '#94d3a2' : 'linear-gradient(135deg, #22c55e, #16a34a)', color: '#fff', fontWeight: 600, boxShadow: '0 6px 16px rgba(22,163,74,0.35)', cursor: saving ? 'not-allowed' : 'pointer' }}>{saving ? '处理中...' : '扔进鱼缸'}</button>
+                <button onClick={onClear} style={{ marginLeft: '10px', padding: '8px 14px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #fb7185, #ef4444)', color: '#fff', fontWeight: 600, boxShadow: '0 6px 16px rgba(239,68,68,0.35)', cursor: 'pointer' }}>清空画布</button>
+
+                {
+                    window.localStorage.getItem('artistName') && (
+                        <button onClick={() => router.push('/view')} style={{ marginLeft: '10px', padding: '8px 14px', borderRadius: '8px', border: 'none', background: '#7777e5', color: '#fff', fontWeight: 600, boxShadow: '0 6px 16px rgba(239,68,68,0.35)', cursor: 'pointer' }}>去鱼缸</button>
+                    )
+                }
+            </div>
+        </div >
+    );
+}
 
 const ArtistNameModal = ({ onSave, initialArtistName, loading }: { onSave: (name: string) => void, initialArtistName: string, loading: boolean }) => {
     const [name, setName] = useState(initialArtistName);
@@ -292,6 +307,8 @@ const ArtistNameModal = ({ onSave, initialArtistName, loading }: { onSave: (name
             <button onClick={() => onSave(name || '匿名')} disabled={loading} style={{ width: '100%', marginTop: '12px', padding: '10px 14px', borderRadius: '8px', border: 'none', background: loading ? '#ccc' : 'linear-gradient(135deg, #3b82f6, #2563eb)', color: '#fff', fontWeight: 600, boxShadow: '0 6px 16px rgba(37,99,235,0.35)', cursor: loading ? 'not-allowed' : 'pointer' }}>
                 {loading ? '提交中...' : '提交'}
             </button>
+
+
         </div>
     );
 };
