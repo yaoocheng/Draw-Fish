@@ -301,7 +301,7 @@ const DrawingCanvas = ({ canvasRef, brushColor, setBrushColor, brushRadius, setB
                 <button onClick={onClear} style={{ marginLeft: '10px', padding: '8px 14px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #fb7185, #ef4444)', color: '#fff', fontWeight: 600, boxShadow: '0 6px 16px rgba(239,68,68,0.35)', cursor: 'pointer' }}>清空画布</button>
 
                 {
-                    window.localStorage.getItem('artistName') && (
+                    typeof window !== 'undefined' && window.localStorage.getItem('artistName') && (
                         <button onClick={() => router.push('/view')} style={{ marginLeft: '10px', padding: '8px 14px', borderRadius: '8px', border: 'none', background: '#7777e5', color: '#fff', fontWeight: 600, boxShadow: '0 6px 16px rgba(239,68,68,0.35)', cursor: 'pointer' }}>去鱼缸</button>
                     )
                 }
