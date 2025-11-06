@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Draw Fish",
-  description: "Draw your own fish in the tank!",
+  title: "Draw Birds",
+  description: "Draw your own birds in the tank!",
 };
 
 export default function RootLayout({

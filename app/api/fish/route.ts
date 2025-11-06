@@ -12,26 +12,29 @@ export async function POST(request: Request) {
   }
 
   try {
+    let existingUser = null;
     if (userId) {
-      // 如果有 userId，说明是老用户更新鱼
-      const existingUser = await db.select().from(users).where(eq(users.user_id, userId)).limit(1);
-      if (existingUser.length === 0) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      const userResult = await db.select().from(users).where(eq(users.user_id, userId)).limit(1);
+      if (userResult.length > 0) {
+        existingUser = userResult[0];
       }
+    }
 
-      const fishId = existingUser[0].fish_id;
+    if (existingUser) {
+      // 老用户，或者 userId 存在且有效
+      const fishId = existingUser.fish_id;
       if (fishId) {
         // 更新鱼
         await db.update(fishes).set({ image_data, updated_at: new Date() }).where(eq(fishes.fish_id, fishId));
-        return NextResponse.json({ success: true, userId });
+        return NextResponse.json({ success: true, userId: existingUser.user_id });
       } else {
-        // 如果用户存在但没有鱼，为他创建一条新鱼
+        // 用户存在但没有鱼，为他创建一条新鱼
         const [newFish] = await db.insert(fishes).values({ artist_name, image_data }).returning();
-        await db.update(users).set({ fish_id: newFish.fish_id, updated_at: new Date() }).where(eq(users.user_id, userId));
-        return NextResponse.json({ success: true, userId });
+        await db.update(users).set({ fish_id: newFish.fish_id, updated_at: new Date() }).where(eq(users.user_id, existingUser.user_id));
+        return NextResponse.json({ success: true, userId: existingUser.user_id });
       }
     } else {
-      // 如果没有 userId，说明是新用户
+      // 新用户，或者 userId 无效
       // 创建新鱼
       const [newFish] = await db.insert(fishes).values({ artist_name, image_data }).returning();
       // 创建新用户并关联鱼

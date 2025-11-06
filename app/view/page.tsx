@@ -136,12 +136,12 @@ const useFishAnimation = (
                 isTail = i < tailEnd;
                 t = isTail ? (tailEnd - i - 1) / (tailEnd - 1) : 0;
                 wiggle = isTail ? Math.sin(time * 6 + phase + t * 3) * t * 16 : 0;
-                drawCol = i;
+                drawCol = w - i - 1;
             } else {
                 isTail = i >= w - tailEnd;
                 t = isTail ? (i - (w - tailEnd)) / (tailEnd - 1) : 0;
                 wiggle = isTail ? Math.sin(time * 6 + phase + t * 3) * t * 16 : 0;
-                drawCol = w - i - 1;
+                drawCol = i;
             }
             ctx.save();
             ctx.translate(x + i, y + wiggle);
