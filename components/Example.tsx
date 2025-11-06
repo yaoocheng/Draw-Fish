@@ -42,8 +42,8 @@ const DrawingHeaderWithExample = () => {
           <Image
             src="/example.png"
             alt="示例图片"
-            width={200}
-            height={200}
+            width={300}
+            height={300}
             style={{ display: 'block', maxWidth: '100%' }}
           />
           <button

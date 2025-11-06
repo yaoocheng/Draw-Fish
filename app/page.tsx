@@ -76,6 +76,14 @@ const BirdDrawingPage = () => {
 
     const saveBird = async (name?: string) => {
         if (loading || saving) return;
+
+        // ✅ 检查是否画过东西
+        const paths = await canvasRef.current?.exportPaths();
+        if (!paths || paths.length === 0) {
+            // alert('请先画一只鸟再提交哦 🐦');
+            return;
+        }
+
         setSaving(true);
 
         const exportCurrent = async (): Promise<string | null> => {
@@ -96,6 +104,7 @@ const BirdDrawingPage = () => {
         }
 
         let dataUrl = currentDrawingDataUrl;
+
         if (!dataUrl) dataUrl = await exportCurrent();
         if (!dataUrl) return setSaving(false);
 
@@ -185,10 +194,10 @@ const BirdDrawingPage = () => {
                 <ArtistNameModal onSave={saveBird} initialArtistName={artistName} loading={loading} />
             )}
 
-            <div style={{ position: 'absolute', left: '24px', top: '24px', fontWeight: 600 }}>
-                作者：滑天下之大稽<br />
+            {/* <div style={{ position: 'absolute', left: '24px', top: '24px', fontWeight: 600 }}>
+                作者：yc<br />
                 邮箱：1766862282@qq.com
-            </div>
+            </div> */}
         </div>
     );
 };
@@ -241,6 +250,8 @@ const DrawingCanvas = ({
                 }}
             >
                 <Example />
+                <div style={{ color: '#0b7285', fontWeight: 600, cursor: 'pointer' }} onClick={() => router.push('/rank')}>查看排名</div>
+                {/* <div style={{ color: '#0b7285', fontWeight: 600, cursor: 'pointer' }} onClick={() => router.push('/rank')}>Rank</div> */}
             </div>
 
             <ReactSketchCanvas
@@ -339,25 +350,22 @@ const DrawingCanvas = ({
                     {saving ? '处理中...' : '开始散养'}
                 </button>
 
-                {typeof window !== 'undefined' &&
-                    window.localStorage.getItem('artistName') && (
-                        <button
-                            onClick={() => router.push('/birds')}
-                            style={{
-                                marginLeft: '10px',
-                                padding: '8px 14px',
-                                borderRadius: '8px',
-                                border: 'none',
-                                background: '#7777e5',
-                                color: '#fff',
-                                fontWeight: 600,
-                                boxShadow: '0 6px 16px rgba(119,119,229,0.35)',
-                                cursor: 'pointer',
-                            }}
-                        >
-                            去看鸟
-                        </button>
-                    )}
+                <button
+                    onClick={() => router.push('/birds')}
+                    style={{
+                        marginLeft: '10px',
+                        padding: '8px 14px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: '#7777e5',
+                        color: '#fff',
+                        fontWeight: 600,
+                        boxShadow: '0 6px 16px rgba(119,119,229,0.35)',
+                        cursor: 'pointer',
+                    }}
+                >
+                    去看鸟
+                </button>
             </div>
         </div>
     );

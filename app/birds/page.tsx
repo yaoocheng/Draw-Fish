@@ -121,18 +121,25 @@ const BirdInfoModal = ({
             )}
             <p style={{ margin: '8px 0', color: '#0b7285', fontWeight: 500 }}>作者: {bird.artist_name}</p>
             <p style={{ margin: '8px 0', color: '#0b7285', fontWeight: 500 }}>
-                创作于: {new Date(bird.created_at).toLocaleDateString('zh-CN')}
+                创作于: {
+                    new Date(bird.created_at).toLocaleDateString('zh-CN', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    })
+                }
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '16px' }}>
-                <button onClick={() => handleVote('like')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '24px' }}>👍 {likes}</button>
-                <button onClick={() => handleVote('dislike')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '24px' }}>👎 {dislikes}</button>
+                <button className='border border-solid border-[#f0f0f0] hover:bg-[#d4edda] hover:border-[#28a745] rounded-md bg-white px-2 py-1' onClick={() => handleVote('like')} style={{  cursor: 'pointer', fontSize: '18px' }}>👍 {likes}</button>
+                <button className='border border-solid border-[#f0f0f0] hover:bg-[#f8d7da] hover:border-[#dc3545] rounded-md bg-white px-2 py-1' onClick={() => handleVote('dislike')} style={{  cursor: 'pointer', fontSize: '18px' }}>👎 {dislikes}</button>
             </div>
             <button
                 onClick={onClose}
                 style={{
                     marginTop: '16px',
-                    padding: '6px 16px',
+                    padding: '4px 12px',
                     borderRadius: '8px',
+                    fontSize: '14px',
                     border: 'none',
                     background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
                     color: '#fff',
@@ -189,10 +196,9 @@ const BirdPage = () => {
                     return;
                 }
 
-                const selectedBirds = birds.slice(0, MAX_BIRDS); // 最多50只
                 const loadedBirds: AnimatedBird[] = [];
 
-                for (const data of selectedBirds) {
+                for (const data of birds) {
                     const img = new Image();
                     await new Promise<void>((resolve) => {
                         img.onload = () => {
@@ -346,7 +352,7 @@ const BirdPage = () => {
                     cursor: 'pointer',
                 }}
             >
-                你的鸟没不好看？重新画！
+                你的鸟不好看？重新画！
             </button>
 
             {selectedBird && (
