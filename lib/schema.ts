@@ -4,6 +4,8 @@ export const fishes = pgTable('fishes', {
   fish_id: serial('fish_id').primaryKey(),
   artist_name: varchar('artist_name', { length: 255 }).notNull(),
   image_data: text('image_data').notNull(),
+  likes: integer('likes').default(0).notNull(),
+  dislikes: integer('dislikes').default(0).notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull(),
 });

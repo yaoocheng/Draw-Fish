@@ -134,6 +134,13 @@ const BirdDrawingPage = () => {
 
     const handleClear = () => canvasRef.current?.clearCanvas();
 
+    // 撤销功能
+    const handleUndo = () => {
+        if (canvasRef.current) {
+            canvasRef.current.undo();
+        }
+    };
+
     return (
         <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #b3e5fc 0%, #e1f5fe 100%)' }}>
             <h1 style={{ fontSize: '48px', fontWeight: '800', color: '#0b7285', textShadow: '2px 2px 8px rgba(0,0,0,0.2)', marginBottom: '24px' }}>
@@ -150,6 +157,7 @@ const BirdDrawingPage = () => {
                     saving={saving}
                     onSave={() => saveBird()}
                     onClear={handleClear}
+                    onUndo={handleUndo} // 传递撤销方法
                 />
             )}
             {view === 'artistName' && <ArtistNameModal onSave={saveBird} initialArtistName={artistName} loading={loading} />}
@@ -158,11 +166,26 @@ const BirdDrawingPage = () => {
 };
 
 // Canvas 子组件
-const DrawingCanvas = ({ canvasRef, brushColor, setBrushColor, brushRadius, setBrushRadius, onSave, onClear, saving }: {
-    canvasRef: React.RefObject<ReactSketchCanvasRef | null>,
-    brushColor: string, setBrushColor: (color: string) => void,
-    brushRadius: number, setBrushRadius: (radius: number) => void,
-    onSave: () => void, onClear: () => void, saving: boolean
+const DrawingCanvas = ({ 
+    canvasRef, 
+    brushColor, 
+    setBrushColor, 
+    brushRadius, 
+    setBrushRadius, 
+    onSave, 
+    onClear, 
+    saving, 
+    onUndo 
+}: { 
+    canvasRef: React.RefObject<ReactSketchCanvasRef | null>, 
+    brushColor: string, 
+    setBrushColor: (color: string) => void, 
+    brushRadius: number, 
+    setBrushRadius: (radius: number) => void, 
+    onSave: () => void, 
+    onClear: () => void, 
+    saving: boolean, 
+    onUndo: () => void 
 }) => {
     const router = useRouter();
     return (
@@ -185,10 +208,21 @@ const DrawingCanvas = ({ canvasRef, brushColor, setBrushColor, brushRadius, setB
                 <input type="color" value={brushColor} onChange={(e) => setBrushColor(e.target.value)} style={{ width: '40px', height: '32px', border: 'none', background: 'transparent', cursor: 'pointer' }} />
                 <label style={{ marginLeft: '10px', color: '#0b7285', fontWeight: 600 }}>笔刷大小：</label>
                 <input type="range" min="1" max="50" value={brushRadius} onChange={(e) => setBrushRadius(Number(e.target.value))} style={{ width: '200px' }} />
-                <button onClick={onSave} disabled={saving} style={{ marginLeft: 'auto', padding: '8px 14px', borderRadius: '8px', border: 'none', background: saving ? '#94d3a2' : 'linear-gradient(135deg, #22c55e, #16a34a)', color: '#fff', fontWeight: 600, boxShadow: '0 6px 16px rgba(22,163,74,0.35)', cursor: saving ? 'not-allowed' : 'pointer' }}>{saving ? '处理中...' : '开始散养'}</button>
-                <button onClick={onClear} style={{ marginLeft: '10px', padding: '8px 14px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #fb7185, #ef4444)', color: '#fff', fontWeight: 600, boxShadow: '0 6px 16px rgba(239,68,68,0.35)', cursor: 'pointer' }}>清空画布</button>
+                <button onClick={onUndo} style={{ marginLeft: '10px', color:'#0b7285', fontWeight: 600, border: 'none', cursor: 'pointer' }}>
+                    撤销
+                </button>
+                
+                <button onClick={onSave} disabled={saving} style={{ marginLeft: 'auto', padding: '8px 14px', borderRadius: '8px', border: 'none', background: saving ? '#94d3a2' : 'linear-gradient(135deg, #22c55e, #16a34a)', color: '#fff', fontWeight: 600, boxShadow: '0 6px 16px rgba(22,163,74,0.35)', cursor: saving ? 'not-allowed' : 'pointer' }}>
+                    {saving ? '处理中...' : '开始散养'}
+                </button>
+                <button onClick={onClear} style={{ marginLeft: '10px', padding: '8px 14px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #fb7185, #ef4444)', color: '#fff', fontWeight: 600, boxShadow: '0 6px 16px rgba(239,68,68,0.35)', cursor: 'pointer' }}>
+                    清空画布
+                </button>
+                
                 {typeof window !== 'undefined' && window.localStorage.getItem('artistName') && (
-                    <button onClick={() => router.push('/birds')} style={{ marginLeft: '10px', padding: '8px 14px', borderRadius: '8px', border: 'none', background: '#7777e5', color: '#fff', fontWeight: 600, boxShadow: '0 6px 16px rgba(119,119,229,0.35)', cursor: 'pointer' }}>去看鸟</button>
+                    <button onClick={() => router.push('/birds')} style={{ marginLeft: '10px', padding: '8px 14px', borderRadius: '8px', border: 'none', background: '#7777e5', color: '#fff', fontWeight: 600, boxShadow: '0 6px 16px rgba(119,119,229,0.35)', cursor: 'pointer' }}>
+                        去看鸟
+                    </button>
                 )}
             </div>
         </div>
