@@ -244,6 +244,18 @@ const FishTankComponent = () => {
 
     return (
         <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #b3e5fc 0%, #e1f5fe 100%)' }}>
+            <h1
+                style={{
+                    fontSize: '48px',
+                    fontWeight: '800',
+                    color: '#0b7285',
+                    textShadow: '2px 2px 8px rgba(0,0,0,0.2)',
+                    marginBottom: '24px',
+                }}
+            >
+                大家一起来养鱼
+            </h1>
+
             {view === 'drawing' && (
                 <DrawingCanvas
                     canvasRef={canvasRef}
