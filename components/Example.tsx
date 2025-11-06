@@ -6,7 +6,7 @@ const DrawingHeaderWithExample = () => {
   const [showExample, setShowExample] = useState(false);
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '0' }}>
       <h2 style={{ margin: 0, color: '#0b7285' }}>画出你的鸟（方向请朝左）</h2>
 
       <button
@@ -15,14 +15,14 @@ const DrawingHeaderWithExample = () => {
           padding: '4px 10px',
           borderRadius: '8px',
           border: 'none',
-          background: '#3b82f6',
+          background: '#3b82f6cc',
           color: '#fff',
           fontWeight: 600,
           cursor: 'pointer',
           fontSize: '14px',
         }}
       >
-        简单示例
+        示例
       </button>
 
       {showExample && (

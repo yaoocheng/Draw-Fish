@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       const fishId = existingUser.fish_id;
       if (fishId) {
         // 更新鱼
-        await db.update(fishes).set({ image_data, updated_at: new Date() }).where(eq(fishes.fish_id, fishId));
+        await db.update(fishes).set({ image_data, likes: 0, dislikes: 0, updated_at: new Date() }).where(eq(fishes.fish_id, fishId));
         return NextResponse.json({ success: true, userId: existingUser.user_id });
       } else {
         // 用户存在但没有鱼，为他创建一条新鱼

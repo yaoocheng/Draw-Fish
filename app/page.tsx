@@ -1,15 +1,8 @@
 'use client';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ReactSketchCanvas, ReactSketchCanvasRef } from 'react-sketch-canvas';
-import Example from '@/components/Example'; 
-
-interface Bird {
-    bird_id: number;
-    artist_name: string;
-    image_data: string;
-    created_at: string;
-}
+import Example from '@/components/Example';
 
 // 裁剪 PNG DataURL，去除透明边界
 const cropCanvasToContent = (dataUrl: string, padding = 10): Promise<string> => {
@@ -26,7 +19,10 @@ const cropCanvasToContent = (dataUrl: string, padding = 10): Promise<string> => 
             const imageData = ctx.getImageData(0, 0, width, height);
             const data = imageData.data;
 
-            let minX = width, minY = height, maxX = 0, maxY = 0;
+            let minX = width,
+                minY = height,
+                maxX = 0,
+                maxY = 0;
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
                     const idx = (y * width + x) * 4;
@@ -61,6 +57,7 @@ const BirdDrawingPage = () => {
     const [currentDrawingDataUrl, setCurrentDrawingDataUrl] = useState<string | null>(null);
     const [brushColor, setBrushColor] = useState('#000000');
     const [brushRadius, setBrushRadius] = useState(10);
+    const [isErasing, setIsErasing] = useState(false); // ✅ 橡皮擦模式
     const canvasRef = useRef<ReactSketchCanvasRef | null>(null);
     const router = useRouter();
 
@@ -118,7 +115,7 @@ const BirdDrawingPage = () => {
                     setUserId(result.userId);
                 }
                 setArtistName(artist);
-                setView('drawing'); // 返回绘画视图
+                setView('drawing');
                 router.push('/birds');
             } else {
                 console.error('保存鸟失败');
@@ -133,17 +130,38 @@ const BirdDrawingPage = () => {
     };
 
     const handleClear = () => canvasRef.current?.clearCanvas();
+    const handleUndo = () => canvasRef.current?.undo();
 
-    // 撤销功能
-    const handleUndo = () => {
-        if (canvasRef.current) {
-            canvasRef.current.undo();
-        }
+    // ✅ 切换橡皮擦模式
+    const toggleEraser = async () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const newMode = !isErasing;
+        setIsErasing(newMode);
+        await canvas.eraseMode(newMode);
     };
 
     return (
-        <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #b3e5fc 0%, #e1f5fe 100%)' }}>
-            <h1 style={{ fontSize: '48px', fontWeight: '800', color: '#0b7285', textShadow: '2px 2px 8px rgba(0,0,0,0.2)', marginBottom: '24px' }}>
+        <div
+            style={{
+                width: '100vw',
+                height: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'linear-gradient(135deg, #b3e5fc 0%, #e1f5fe 100%)',
+            }}
+        >
+            <h1
+                style={{
+                    fontSize: '48px',
+                    fontWeight: '800',
+                    color: '#0b7285',
+                    textShadow: '2px 2px 8px rgba(0,0,0,0.2)',
+                    marginBottom: '24px',
+                }}
+            >
                 大家一起来玩鸟 🐦
             </h1>
 
@@ -157,40 +175,71 @@ const BirdDrawingPage = () => {
                     saving={saving}
                     onSave={() => saveBird()}
                     onClear={handleClear}
-                    onUndo={handleUndo} // 传递撤销方法
+                    onUndo={handleUndo}
+                    onToggleEraser={toggleEraser}
+                    isErasing={isErasing}
                 />
             )}
-            {view === 'artistName' && <ArtistNameModal onSave={saveBird} initialArtistName={artistName} loading={loading} />}
+
+            {view === 'artistName' && (
+                <ArtistNameModal onSave={saveBird} initialArtistName={artistName} loading={loading} />
+            )}
+
+            <div style={{ position: 'absolute', left: '24px', top: '24px', fontWeight: 600 }}>
+                作者：滑天下之大稽<br />
+                邮箱：1766862282@qq.com
+            </div>
         </div>
     );
 };
 
-// Canvas 子组件
-const DrawingCanvas = ({ 
-    canvasRef, 
-    brushColor, 
-    setBrushColor, 
-    brushRadius, 
-    setBrushRadius, 
-    onSave, 
-    onClear, 
-    saving, 
-    onUndo 
-}: { 
-    canvasRef: React.RefObject<ReactSketchCanvasRef | null>, 
-    brushColor: string, 
-    setBrushColor: (color: string) => void, 
-    brushRadius: number, 
-    setBrushRadius: (radius: number) => void, 
-    onSave: () => void, 
-    onClear: () => void, 
-    saving: boolean, 
-    onUndo: () => void 
+const DrawingCanvas = ({
+    canvasRef,
+    brushColor,
+    setBrushColor,
+    brushRadius,
+    setBrushRadius,
+    onSave,
+    onClear,
+    saving,
+    onUndo,
+    onToggleEraser,
+    isErasing,
+}: {
+    canvasRef: React.RefObject<ReactSketchCanvasRef | null>;
+    brushColor: string;
+    setBrushColor: (color: string) => void;
+    brushRadius: number;
+    setBrushRadius: (radius: number) => void;
+    onSave: () => void;
+    onClear: () => void;
+    saving: boolean;
+    onUndo: () => void;
+    onToggleEraser: () => void;
+    isErasing: boolean;
 }) => {
     const router = useRouter();
     return (
-        <div style={{ border: '1px solid #d1e9ff', borderRadius: '16px', padding: '16px', background: 'rgba(255,255,255,0.88)', boxShadow: '0 12px 32px rgba(2,132,199,0.25)', backdropFilter: 'saturate(180%) blur(6px)', maxWidth: '1040px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+        <div
+            style={{
+                border: '1px solid #d1e9ff',
+                borderRadius: '16px',
+                padding: '16px',
+                background: 'rgba(255,255,255,0.88)',
+                boxShadow: '0 12px 32px rgba(2,132,199,0.25)',
+                backdropFilter: 'saturate(180%) blur(6px)',
+                maxWidth: '1040px',
+            }}
+        >
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                    marginBottom: '12px',
+                }}
+            >
                 <Example />
             </div>
 
@@ -205,38 +254,171 @@ const DrawingCanvas = ({
 
             <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <label style={{ color: '#0b7285', fontWeight: 600 }}>颜色：</label>
-                <input type="color" value={brushColor} onChange={(e) => setBrushColor(e.target.value)} style={{ width: '40px', height: '32px', border: 'none', background: 'transparent', cursor: 'pointer' }} />
+                <input
+                    type="color"
+                    value={brushColor}
+                    onChange={(e) => setBrushColor(e.target.value)}
+                    style={{
+                        width: '40px',
+                        height: '32px',
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                    }}
+                />
                 <label style={{ marginLeft: '10px', color: '#0b7285', fontWeight: 600 }}>笔刷大小：</label>
-                <input type="range" min="1" max="50" value={brushRadius} onChange={(e) => setBrushRadius(Number(e.target.value))} style={{ width: '200px' }} />
-                <button onClick={onUndo} style={{ marginLeft: '10px', color:'#0b7285', fontWeight: 600, border: 'none', cursor: 'pointer' }}>
+                <input
+                    type="range"
+                    min="1"
+                    max="50"
+                    value={brushRadius}
+                    onChange={(e) => setBrushRadius(Number(e.target.value))}
+                    style={{ width: '200px' }}
+                />
+
+                {/* ✅ 橡皮擦按钮 */}
+                <button
+                    onClick={onToggleEraser}
+                    style={{
+                        marginLeft: '10px',
+                        color: isErasing ? '#fff' : '#0b7285',
+                        background: isErasing ? '#0b7285' : 'transparent',
+                        border: isErasing ? '1px solid #0b7285' : '1px solid transparent',
+                        borderRadius: '8px',
+                        padding: '6px 8px',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                    }}
+                >
+                    橡皮擦
+                </button>
+
+                <button
+                    onClick={onUndo}
+                    style={{
+                        marginLeft: '10px',
+                        color: '#0b7285',
+                        fontWeight: 600,
+                        border: 'none',
+                        cursor: 'pointer',
+                    }}
+                >
                     撤销
                 </button>
-                
-                <button onClick={onSave} disabled={saving} style={{ marginLeft: 'auto', padding: '8px 14px', borderRadius: '8px', border: 'none', background: saving ? '#94d3a2' : 'linear-gradient(135deg, #22c55e, #16a34a)', color: '#fff', fontWeight: 600, boxShadow: '0 6px 16px rgba(22,163,74,0.35)', cursor: saving ? 'not-allowed' : 'pointer' }}>
-                    {saving ? '处理中...' : '开始散养'}
-                </button>
-                <button onClick={onClear} style={{ marginLeft: '10px', padding: '8px 14px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #fb7185, #ef4444)', color: '#fff', fontWeight: 600, boxShadow: '0 6px 16px rgba(239,68,68,0.35)', cursor: 'pointer' }}>
+
+                <button
+                    onClick={onClear}
+                    style={{
+                        marginLeft: '10px',
+                        color: '#0b7285',
+                        fontWeight: 600,
+                        border: 'none',
+                        cursor: 'pointer',
+                    }}
+                >
                     清空画布
                 </button>
-                
-                {typeof window !== 'undefined' && window.localStorage.getItem('artistName') && (
-                    <button onClick={() => router.push('/birds')} style={{ marginLeft: '10px', padding: '8px 14px', borderRadius: '8px', border: 'none', background: '#7777e5', color: '#fff', fontWeight: 600, boxShadow: '0 6px 16px rgba(119,119,229,0.35)', cursor: 'pointer' }}>
-                        去看鸟
-                    </button>
-                )}
+
+                <button
+                    onClick={onSave}
+                    disabled={saving}
+                    style={{
+                        marginLeft: 'auto',
+                        padding: '8px 14px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: saving
+                            ? '#94d3a2'
+                            : 'linear-gradient(135deg, #22c55e, #16a34a)',
+                        color: '#fff',
+                        fontWeight: 600,
+                        boxShadow: '0 6px 16px rgba(22,163,74,0.35)',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                    }}
+                >
+                    {saving ? '处理中...' : '开始散养'}
+                </button>
+
+                {typeof window !== 'undefined' &&
+                    window.localStorage.getItem('artistName') && (
+                        <button
+                            onClick={() => router.push('/birds')}
+                            style={{
+                                marginLeft: '10px',
+                                padding: '8px 14px',
+                                borderRadius: '8px',
+                                border: 'none',
+                                background: '#7777e5',
+                                color: '#fff',
+                                fontWeight: 600,
+                                boxShadow: '0 6px 16px rgba(119,119,229,0.35)',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            去看鸟
+                        </button>
+                    )}
             </div>
         </div>
     );
-}
+};
 
 // 艺术家名字弹窗
-const ArtistNameModal = ({ onSave, initialArtistName, loading }: { onSave: (name: string) => void, initialArtistName: string, loading: boolean }) => {
+const ArtistNameModal = ({
+    onSave,
+    initialArtistName,
+    loading,
+}: {
+    onSave: (name: string) => void;
+    initialArtistName: string;
+    loading: boolean;
+}) => {
     const [name, setName] = useState(initialArtistName);
     return (
-        <div style={{ padding: '20px', background: 'rgba(255,255,255,0.95)', borderRadius: '16px', boxShadow: '0 12px 32px rgba(2,132,199,0.25)', border: '1px solid #d1e9ff', backdropFilter: 'saturate(180%) blur(6px)', minWidth: '360px' }}>
+        <div
+            style={{
+                padding: '20px',
+                background: 'rgba(255,255,255,0.95)',
+                borderRadius: '16px',
+                boxShadow: '0 12px 32px rgba(2,132,199,0.25)',
+                border: '1px solid #d1e9ff',
+                backdropFilter: 'saturate(180%) blur(6px)',
+                minWidth: '360px',
+            }}
+        >
             <h2 style={{ marginTop: 0, color: '#0b7285' }}>填写你的艺术家名字</h2>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="艺术家名字" style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #93c5fd', marginTop: '8px', boxSizing: 'border-box' }} />
-            <button onClick={() => onSave(name || '匿名')} disabled={loading} style={{ width: '100%', marginTop: '12px', padding: '10px 14px', borderRadius: '8px', border: 'none', background: loading ? '#ccc' : 'linear-gradient(135deg, #3b82f6, #2563eb)', color: '#fff', fontWeight: 600, boxShadow: '0 6px 16px rgba(37,99,235,0.35)', cursor: loading ? 'not-allowed' : 'pointer' }}>
+            <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="艺术家名字"
+                style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid #93c5fd',
+                    marginTop: '8px',
+                    boxSizing: 'border-box',
+                }}
+            />
+            <button
+                onClick={() => onSave(name || '匿名')}
+                disabled={loading}
+                style={{
+                    width: '100%',
+                    marginTop: '12px',
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: loading
+                        ? '#ccc'
+                        : 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                    color: '#fff',
+                    fontWeight: 600,
+                    boxShadow: '0 6px 16px rgba(37,99,235,0.35)',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                }}
+            >
                 {loading ? '提交中...' : '提交'}
             </button>
         </div>

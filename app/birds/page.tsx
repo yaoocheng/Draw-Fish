@@ -339,14 +339,14 @@ const BirdPage = () => {
                     padding: '10px 16px',
                     borderRadius: '8px',
                     border: 'none',
-                    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                    background: 'linear-gradient(135deg, #3bf692, #2563eb)',
                     color: '#fff',
                     fontWeight: 600,
                     boxShadow: '0 6px 16px rgba(37,99,235,0.35)',
                     cursor: 'pointer',
                 }}
             >
-                重新画鸟
+                你的鸟没不好看？重新画！
             </button>
 
             {selectedBird && (
