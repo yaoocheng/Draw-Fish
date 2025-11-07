@@ -79,11 +79,12 @@ const BirdDrawingPage = () => {
         if (loading || saving) return;
 
         // ✅ 检查是否画过东西
-        const paths = await canvasRef.current?.exportPaths();
-        if (!paths || paths.length === 0) {
-            // alert('请先画一只鸟再提交哦 🐦');
-            return;
-        }
+        // const paths = await canvasRef.current?.exportPaths();
+        // console.log(paths);
+        // if (!paths || paths.length === 0) {
+        //     // alert('请先画一只鸟再提交哦 🐦');
+        //     return;
+        // }
 
         setSaving(true);
 
