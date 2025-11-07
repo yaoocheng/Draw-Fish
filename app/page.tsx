@@ -169,7 +169,7 @@ const BirdDrawingPage = () => {
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'linear-gradient(135deg, #b3e5fc 0%, #e1f5fe 100%)',
+                // background: 'linear-gradient(135deg, #b3e5fc 0%, #e1f5fe 100%)',
             }}
         >
             {/* <h1
@@ -239,12 +239,13 @@ const DrawingCanvas = ({
     isErasing: boolean;
 }) => {
     const router = useRouter();
+    const [hasContent, setHasContent] = useState(false);
     return (
         <div
             style={{
                 border: '1px solid #d1e9ff',
                 padding: '16px',
-                background: 'rgba(255,255,255,0.88)',
+                // background: 'rgba(255,255,255,0.88)',
                 boxShadow: '0 12px 32px rgba(2,132,199,0.25)',
                 backdropFilter: 'saturate(180%) blur(6px)',
                 width: '100%',
@@ -261,19 +262,28 @@ const DrawingCanvas = ({
                 }}
             >
                 <Example />
-                <div style={{ color: '#0b7285', fontWeight: 600, cursor: 'pointer' }} onClick={() => router.push('/rank')}>查看排名</div>
+                <div
+                    onClick={() => router.push('/rank')}
+                    className="text-teal-700 font-semibold cursor-pointer hover:text-teal-800 hover:underline transition"
+                >
+                    查看排名
+                </div>
             </div>
 
             {/* 关键：传入 strokeWidth、eraserWidth 和 eraseMode */}
             <ReactSketchCanvas
                 ref={canvasRef}
                 width="100%"
-                height="88%"
+                height="86%"
                 strokeWidth={brushRadius}
                 eraserWidth={eraserWidth}
                 // eraseMode={isErasing}
                 strokeColor={brushColor}
                 canvasColor="transparent"
+                onChange={(paths: unknown) => {
+                    const has = Array.isArray(paths) && paths.length > 0;
+                    setHasContent(has);
+                }}
             />
 
             <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
@@ -324,82 +334,57 @@ const DrawingCanvas = ({
 
                 <button
                     onClick={onToggleEraser}
-                    style={{
-                        marginLeft: '10px',
-                        color: isErasing ? '#fff' : '#0b7285',
-                        background: isErasing ? '#0b7285' : 'transparent',
-                        border: isErasing ? '1px solid #0b7285' : '1px solid transparent',
-                        borderRadius: '8px',
-                        padding: '6px 8px',
-                        cursor: 'pointer',
-                        fontWeight: 600,
-                    }}
+                    className={`
+    ml-2 rounded-lg px-3 py-1.5 font-semibold transition cursor-pointer
+    ${isErasing
+                            ? 'bg-teal-700 text-white border border-teal-700 shadow-md hover:bg-teal-800'
+                            : 'text-teal-700 border border-transparent hover:bg-teal-50'}
+  `}
                 >
                     橡皮擦
                 </button>
 
-                <button
-                    onClick={onUndo}
-                    style={{
-                        marginLeft: '10px',
-                        color: '#0b7285',
-                        fontWeight: 600,
-                        border: 'none',
-                        cursor: 'pointer',
-                    }}
-                >
-                    撤销
-                </button>
 
                 <button
-                    onClick={onClear}
-                    style={{
-                        marginLeft: '10px',
-                        color: '#0b7285',
-                        fontWeight: 600,
-                        border: 'none',
-                        cursor: 'pointer',
+                    onClick={onUndo}
+                    className="ml-2 cursor-pointer text-teal-700 font-semibold hover:text-teal-800 transition"
+                >
+                    撤回
+                </button>
+
+
+                <button
+                    onClick={() => {
+                        onClear();
+                        setHasContent(false);
                     }}
+                    className="ml-2 cursor-pointer text-teal-700 font-semibold hover:text-teal-800  transition"
                 >
                     清空画布
                 </button>
 
+
                 <button
                     onClick={onSave}
-                    disabled={saving}
-                    style={{
-                        marginLeft: 'auto',
-                        padding: '8px 14px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: saving
-                            ? '#94d3a2'
-                            : 'linear-gradient(135deg, #22c55e, #16a34a)',
-                        color: '#fff',
-                        fontWeight: 600,
-                        boxShadow: '0 6px 16px rgba(22,163,74,0.35)',
-                        cursor: saving ? 'not-allowed' : 'pointer',
-                    }}
+                    disabled={saving || !hasContent}
+                    className={`
+    ml-auto rounded-lg px-4 py-2 font-semibold text-white transition
+    ${(saving || !hasContent)
+                            ? 'bg-green-300 cursor-not-allowed'
+                            : 'bg-gradient-to-tr cursor-pointer from-green-500 to-green-600 shadow-xl shadow-green-500/40 hover:shadow-xl hover:shadow-green-600/50'}
+  `}
                 >
                     {saving ? '处理中...' : '开始散养'}
                 </button>
 
+
                 <button
                     onClick={() => router.push('/birds')}
-                    style={{
-                        marginLeft: '10px',
-                        padding: '8px 14px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: '#7777e5',
-                        color: '#fff',
-                        fontWeight: 600,
-                        boxShadow: '0 6px 16px rgba(119,119,229,0.35)',
-                        cursor: 'pointer',
-                    }}
+                    className="ml-2 rounded-lg px-4 py-2 cursor-pointer font-semibold text-white bg-[#7777e5] shadow-xl shadow-[#7777e5]/40 hover:shadow-xl hover:shadow-[#7777e5]/60 transition"
                 >
-                    去看鸟
+                    去看小鸟
                 </button>
+
             </div>
         </div>
     );
@@ -446,21 +431,16 @@ const ArtistNameModal = ({
             <button
                 onClick={() => onSave(name || '匿名')}
                 disabled={loading}
-                style={{
-                    width: '100%',
-                    marginTop: '12px',
-                    padding: '10px 14px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    background: loading ? '#ccc' : 'linear-gradient(135deg, #3b82f6, #2563eb)',
-                    color: '#fff',
-                    fontWeight: 600,
-                    boxShadow: '0 6px 16px rgba(37,99,235,0.35)',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                }}
+                className={`
+    w-full mt-3 rounded-lg px-4 py-2.5 font-semibold text-white transition cursor-pointer
+    ${loading
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-gradient-to-tr from-blue-500 to-blue-600 shadow-xl shadow-blue-500/40 hover:shadow-xl hover:shadow-blue-600/50'}
+  `}
             >
                 {loading ? '提交中...' : '提交'}
             </button>
+
         </div>
     );
 };

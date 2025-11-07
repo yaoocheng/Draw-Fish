@@ -99,6 +99,8 @@ const RankPage = () => {
                 const res = await fetch('/api/fishes');
                 if (!res.ok) throw new Error('Failed to fetch birds');
                 const data: BirdData[] = await res.json();
+                console.log('Vote response:', data);
+
                 const sortedData = data.sort((a, b) => (b.likes ?? 0) - (a.likes ?? 0)).slice(0, 25);
                 setBirds(sortedData);
             } catch (err) {
