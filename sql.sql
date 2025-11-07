@@ -16,3 +16,12 @@ CREATE TABLE fishes (
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
+
+
+-- 添加点赞字段，默认 0
+ALTER TABLE fishes
+ADD COLUMN likes INTEGER DEFAULT 0;
+
+-- 添加不点赞字段，默认 0
+ALTER TABLE fishes
+ADD COLUMN dislikes INTEGER DEFAULT 0;

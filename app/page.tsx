@@ -56,7 +56,8 @@ const BirdDrawingPage = () => {
     const [view, setView] = useState<'drawing' | 'artistName'>('drawing');
     const [currentDrawingDataUrl, setCurrentDrawingDataUrl] = useState<string | null>(null);
     const [brushColor, setBrushColor] = useState('#000000');
-    const [brushRadius, setBrushRadius] = useState(10);
+    const [brushRadius, setBrushRadius] = useState(10); // 笔刷（画笔）大小
+    const [eraserWidth, setEraserWidth] = useState(20); // ✅ 橡皮擦大小（新增）
     const [isErasing, setIsErasing] = useState(false); // ✅ 橡皮擦模式
     const canvasRef = useRef<ReactSketchCanvasRef | null>(null);
     const router = useRouter();
@@ -141,13 +142,21 @@ const BirdDrawingPage = () => {
     const handleClear = () => canvasRef.current?.clearCanvas();
     const handleUndo = () => canvasRef.current?.undo();
 
-    // ✅ 切换橡皮擦模式
+    // 切换橡皮擦模式：同时设置 prop（eraseMode）和 ref 方法（兼容）
     const toggleEraser = async () => {
         const canvas = canvasRef.current;
-        if (!canvas) return;
+        if (!canvas) {
+            setIsErasing(prev => !prev);
+            return;
+        }
         const newMode = !isErasing;
         setIsErasing(newMode);
-        await canvas.eraseMode(newMode);
+        try {
+            // 方法调用（旧版 / 兼容）
+            await canvas.eraseMode(newMode);
+        } catch (e) {
+            // ignore if method not present
+        }
     };
 
     return (
@@ -162,17 +171,17 @@ const BirdDrawingPage = () => {
                 background: 'linear-gradient(135deg, #b3e5fc 0%, #e1f5fe 100%)',
             }}
         >
-            <h1
-                style={{
-                    fontSize: '48px',
-                    fontWeight: '800',
-                    color: '#0b7285',
-                    textShadow: '2px 2px 8px rgba(0,0,0,0.2)',
-                    marginBottom: '24px',
-                }}
-            >
-                大家一起来玩鸟 🐦
-            </h1>
+            {/* <h1
+        style={{
+          fontSize: '48px',
+          fontWeight: '800',
+          color: '#0b7285',
+          textShadow: '2px 2px 8px rgba(0,0,0,0.2)',
+          marginBottom: '24px',
+        }}
+      >
+        大家一起来玩鸟 🐦
+      </h1> */}
 
             {view === 'drawing' && (
                 <DrawingCanvas
@@ -181,6 +190,8 @@ const BirdDrawingPage = () => {
                     setBrushColor={setBrushColor}
                     brushRadius={brushRadius}
                     setBrushRadius={setBrushRadius}
+                    eraserWidth={eraserWidth}
+                    setEraserWidth={setEraserWidth}
                     saving={saving}
                     onSave={() => saveBird()}
                     onClear={handleClear}
@@ -193,11 +204,6 @@ const BirdDrawingPage = () => {
             {view === 'artistName' && (
                 <ArtistNameModal onSave={saveBird} initialArtistName={artistName} loading={loading} />
             )}
-
-            {/* <div style={{ position: 'absolute', left: '24px', top: '24px', fontWeight: 600 }}>
-                作者：yc<br />
-                邮箱：1766862282@qq.com
-            </div> */}
         </div>
     );
 };
@@ -208,6 +214,8 @@ const DrawingCanvas = ({
     setBrushColor,
     brushRadius,
     setBrushRadius,
+    eraserWidth,
+    setEraserWidth,
     onSave,
     onClear,
     saving,
@@ -220,6 +228,8 @@ const DrawingCanvas = ({
     setBrushColor: (color: string) => void;
     brushRadius: number;
     setBrushRadius: (radius: number) => void;
+    eraserWidth: number;
+    setEraserWidth: (w: number) => void;
     onSave: () => void;
     onClear: () => void;
     saving: boolean;
@@ -232,12 +242,12 @@ const DrawingCanvas = ({
         <div
             style={{
                 border: '1px solid #d1e9ff',
-                borderRadius: '16px',
                 padding: '16px',
                 background: 'rgba(255,255,255,0.88)',
                 boxShadow: '0 12px 32px rgba(2,132,199,0.25)',
                 backdropFilter: 'saturate(180%) blur(6px)',
-                maxWidth: '1040px',
+                width: '100%',
+                height: '100%',
             }}
         >
             <div
@@ -251,43 +261,66 @@ const DrawingCanvas = ({
             >
                 <Example />
                 <div style={{ color: '#0b7285', fontWeight: 600, cursor: 'pointer' }} onClick={() => router.push('/rank')}>查看排名</div>
-                {/* <div style={{ color: '#0b7285', fontWeight: 600, cursor: 'pointer' }} onClick={() => router.push('/rank')}>Rank</div> */}
             </div>
 
+            {/* 关键：传入 strokeWidth、eraserWidth 和 eraseMode */}
             <ReactSketchCanvas
                 ref={canvasRef}
-                width="1000px"
-                height="500px"
+                width="100%"
+                height="88%"
                 strokeWidth={brushRadius}
+                eraserWidth={eraserWidth}
+                // eraseMode={isErasing}
                 strokeColor={brushColor}
                 canvasColor="transparent"
             />
 
-            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <label style={{ color: '#0b7285', fontWeight: 600 }}>颜色：</label>
-                <input
-                    type="color"
-                    value={brushColor}
-                    onChange={(e) => setBrushColor(e.target.value)}
-                    style={{
-                        width: '40px',
-                        height: '32px',
-                        border: 'none',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                    }}
-                />
-                <label style={{ marginLeft: '10px', color: '#0b7285', fontWeight: 600 }}>笔刷大小：</label>
-                <input
-                    type="range"
-                    min="1"
-                    max="50"
-                    value={brushRadius}
-                    onChange={(e) => setBrushRadius(Number(e.target.value))}
-                    style={{ width: '200px' }}
-                />
+            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                {/* 画笔模式控件 */}
+                {!isErasing && (
+                    <>
+                        <label style={{ color: '#0b7285', fontWeight: 600 }}>颜色：</label>
+                        <input
+                            type="color"
+                            value={brushColor}
+                            onChange={(e) => setBrushColor(e.target.value)}
+                            style={{
+                                width: '40px',
+                                height: '32px',
+                                border: 'none',
+                                background: 'transparent',
+                                cursor: 'pointer',
+                            }}
+                        />
+                        <label style={{ marginLeft: '10px', color: '#0b7285', fontWeight: 600 }}>笔刷大小：</label>
+                        <input
+                            type="range"
+                            min="1"
+                            max="50"
+                            value={brushRadius}
+                            onChange={(e) => setBrushRadius(Number(e.target.value))}
+                            style={{ width: '200px' }}
+                        />
+                        <div style={{ fontSize: 12, color: '#0b7285' }}>当前大小: {brushRadius}</div>
+                    </>
+                )}
 
-                {/* ✅ 橡皮擦按钮 */}
+                {/* 橡皮擦模式控件（独立大小） */}
+                {isErasing && (
+                    <>
+                        <label style={{ color: '#0b7285', fontWeight: 600 }}>橡皮擦大小：</label>
+                        <input
+                            type="range"
+                            min="5"
+                            max="120"
+                            value={eraserWidth}
+                            onChange={(e) => setEraserWidth(Number(e.target.value))}
+                            style={{ width: '200px' }}
+                        />
+                        <div style={{ fontSize: 12, color: '#0b7285' }}>当前大小: {eraserWidth}</div>
+                    </>
+                )}
+
                 <button
                     onClick={onToggleEraser}
                     style={{
@@ -371,7 +404,7 @@ const DrawingCanvas = ({
     );
 };
 
-// 艺术家名字弹窗
+// 艺术家名字弹窗（不变）
 const ArtistNameModal = ({
     onSave,
     initialArtistName,
@@ -418,9 +451,7 @@ const ArtistNameModal = ({
                     padding: '10px 14px',
                     borderRadius: '8px',
                     border: 'none',
-                    background: loading
-                        ? '#ccc'
-                        : 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                    background: loading ? '#ccc' : 'linear-gradient(135deg, #3b82f6, #2563eb)',
                     color: '#fff',
                     fontWeight: 600,
                     boxShadow: '0 6px 16px rgba(37,99,235,0.35)',
